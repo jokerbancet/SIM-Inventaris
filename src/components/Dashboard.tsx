@@ -52,7 +52,7 @@ interface Stats {
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 export default function Dashboard() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [exportMonth, setExportMonth] = useState(format(new Date(), 'MM'));
@@ -189,56 +189,67 @@ export default function Dashboard() {
             <p className="text-xs text-slate-500">Unduh data peminjaman dan kerusakan barang</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <select 
-            value={exportMonth}
-            onChange={(e) => setExportMonth(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {['01','02','03','04','05','06','07','08','09','10','11','12'].map(m => (
-              <option key={m} value={m}>{format(new Date(2024, parseInt(m)-1), 'MMMM', { locale: id })}</option>
-            ))}
-          </select>
-          <select 
-            value={exportYear}
-            onChange={(e) => setExportYear(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {[2024, 2025, 2026].map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-          <button 
-            onClick={() => handleExport('pdf')}
-            disabled={isExporting}
-            className="flex items-center gap-2 bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors disabled:opacity-50"
-          >
-            <FileText size={18} />
-            PDF
-          </button>
-          <button 
-            onClick={() => handleExport('excel')}
-            disabled={isExporting}
-            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50"
-          >
-            <TableIcon size={18} />
-            Excel
-          </button>
-        </div>
+        {user?.role === 'admin' ? (
+          <div className="flex items-center gap-3">
+            <select 
+              value={exportMonth}
+              onChange={(e) => setExportMonth(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
+                const monthStr = m.toString().padStart(2, '0');
+                return (
+                  <option key={monthStr} value={monthStr}>
+                    {format(new Date(2024, m-1), 'MMMM', { locale: id })}
+                  </option>
+                );
+              })}
+            </select>
+            <select 
+              value={exportYear}
+              onChange={(e) => setExportYear(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {[2024, 2025, 2026].map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <button 
+              onClick={() => handleExport('pdf')}
+              disabled={isExporting}
+              className="flex items-center gap-2 bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors disabled:opacity-50"
+            >
+              <FileText size={18} />
+              PDF
+            </button>
+            <button 
+              onClick={() => handleExport('excel')}
+              disabled={isExporting}
+              className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            >
+              <TableIcon size={18} />
+              Excel
+            </button>
+          </div>
+        ) : (
+          <div className="hidden md:block">
+            <p className="text-sm text-slate-500 italic font-medium">Laporan hanya dapat diunduh oleh Admin</p>
+          </div>
+        )}
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-4 sm:gap-6">
         {statCards.map((card, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+          <div key={i} className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl ${card.bg} ${card.color}`}>
-                <card.icon size={24} />
+              <div className={`p-2.5 sm:p-3 rounded-xl ${card.bg} ${card.color}`}>
+                <card.icon size={20} className="sm:w-6 sm:h-6" />
               </div>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{card.label}</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">{card.label}</span>
             </div>
             <div className="flex items-end justify-between">
-              <h3 className="text-3xl font-bold text-slate-800">{card.value}</h3>
+              <h3 className="text-2xl sm:text-3xl font-bold text-slate-800">{card.value}</h3>
             </div>
           </div>
         ))}

@@ -64,13 +64,13 @@ export default function Logs() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Log Aktivitas</h2>
-          <p className="text-slate-500 text-sm">Catatan perubahan data dalam sistem</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Log Aktivitas</h2>
+          <p className="text-slate-500 text-xs sm:text-sm">Catatan perubahan data dalam sistem</p>
         </div>
         
-        <div className="relative w-full md:w-72">
+        <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"

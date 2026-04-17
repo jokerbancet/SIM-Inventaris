@@ -9,11 +9,22 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = (location.state as any)?.from?.pathname || '/';
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      await loginWithGoogle();
+    } catch (err: any) {
+      setError(err.message || 'Gagal masuk dengan Google.');
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +123,21 @@ export default function Login() {
               )}
             </button>
           </form>
+
+          <div className="mt-6 flex items-center gap-4">
+            <div className="flex-1 h-px bg-slate-200"></div>
+            <span className="text-xs text-slate-400 font-medium">ATAU</span>
+            <div className="flex-1 h-px bg-slate-200"></div>
+          </div>
+
+          <button
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="mt-6 w-full bg-white hover:bg-slate-50 text-slate-700 font-semibold py-3 px-4 border border-slate-200 rounded-xl transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" referrerPolicy="no-referrer" />
+            Masuk dengan Google
+          </button>
 
           <div className="mt-8 pt-8 border-t border-slate-100 text-center">
             <p className="text-xs text-slate-400">

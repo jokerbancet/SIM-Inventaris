@@ -11,6 +11,7 @@ import {
   Menu, 
   X, 
   User as UserIcon,
+  Users as UsersIcon,
   ChevronRight,
   ChevronDown,
   AlertTriangle,
@@ -25,6 +26,7 @@ import Categories from './components/Categories';
 import Locations from './components/Locations';
 import Damages from './components/Damages';
 import Logs from './components/Logs';
+import Users from './components/Users';
 import { motion, AnimatePresence } from 'motion/react';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly }) => {
@@ -51,10 +53,18 @@ interface MenuItem {
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(window.innerWidth > 1024);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isDataMasterOpen, setIsDataMasterOpen] = React.useState(true);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Close sidebar on mobile route change
+  React.useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [location.pathname]);
 
   const menuItems: MenuItem[] = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -69,6 +79,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   ];
 
   const otherItems: MenuItem[] = [
+    { name: 'Kelola User', path: '/users', icon: UsersIcon, adminOnly: true },
     { name: 'Log Aktivitas', path: '/logs', icon: Activity, adminOnly: true },
   ];
 
@@ -80,19 +91,40 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row relative">
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <aside 
-        className={`bg-white border-r border-slate-200 transition-all duration-300 flex flex-col ${
+        className={`bg-white border-r border-slate-200 transition-all duration-300 flex flex-col fixed inset-y-0 left-0 z-50 lg:relative ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } ${
           isSidebarOpen ? 'w-64' : 'w-20'
         }`}
       >
-        <div className="p-6 flex items-center justify-between border-b border-slate-100">
-          {isSidebarOpen && (
+        <div className="p-6 flex items-center justify-between border-b border-slate-100 h-[73px]">
+          {(isSidebarOpen || isMobileMenuOpen) && (
             <span className="font-bold text-xl text-indigo-600 truncate">SIM Inventaris</span>
           )}
           <button 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            onClick={() => {
+              if (window.innerWidth < 1024) {
+                setIsMobileMenuOpen(false);
+              } else {
+                setIsSidebarOpen(!isSidebarOpen);
+              }
+            }}
             className="p-1 hover:bg-slate-100 rounded-md text-slate-500"
           >
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
@@ -214,16 +246,24 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto h-screen">
-        <header className="bg-white border-b border-slate-200 p-4 sticky top-0 z-10 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-slate-800">
-            {allItems.find(i => i.path === location.pathname)?.name || 'Halaman'}
-          </h1>
-          <div className="text-sm text-slate-500">
+      <main className="flex-1 overflow-y-auto lg:h-screen w-full">
+        <header className="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-10 flex items-center justify-between h-[73px]">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 hover:bg-slate-100 rounded-md text-slate-500 lg:hidden"
+            >
+              <Menu size={20} />
+            </button>
+            <h1 className="text-lg font-bold text-slate-800 truncate max-w-[150px] sm:max-w-none">
+              {allItems.find(i => i.path === location.pathname)?.name || 'Halaman'}
+            </h1>
+          </div>
+          <div className="text-sm text-slate-500 hidden sm:block">
             {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </div>
         </header>
-        <div className="p-6 max-w-7xl mx-auto">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -241,50 +281,74 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
+const AppContent: React.FC = () => {
+  const { isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-500 font-medium animate-pulse">Memuat aplikasi...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Layout><Dashboard /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/inventory" element={
+          <ProtectedRoute>
+            <Layout><Inventory /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/borrowings" element={
+          <ProtectedRoute>
+            <Layout><Borrowings /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/damages" element={
+          <ProtectedRoute>
+            <Layout><Damages /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/categories" element={
+          <ProtectedRoute adminOnly>
+            <Layout><Categories /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/locations" element={
+          <ProtectedRoute adminOnly>
+            <Layout><Locations /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/logs" element={
+          <ProtectedRoute adminOnly>
+            <Layout><Logs /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/users" element={
+          <ProtectedRoute adminOnly>
+            <Layout><Users /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  );
+};
+
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Layout><Dashboard /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/inventory" element={
-            <ProtectedRoute>
-              <Layout><Inventory /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/borrowings" element={
-            <ProtectedRoute>
-              <Layout><Borrowings /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/damages" element={
-            <ProtectedRoute>
-              <Layout><Damages /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/categories" element={
-            <ProtectedRoute adminOnly>
-              <Layout><Categories /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/locations" element={
-            <ProtectedRoute adminOnly>
-              <Layout><Locations /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/logs" element={
-            <ProtectedRoute adminOnly>
-              <Layout><Logs /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+      <AppContent />
     </AuthProvider>
   );
 }

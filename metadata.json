@@ -1,5 +1,8 @@
 {
-  "name": "Sistem Informasi Manajemen Inventaris Institusi",
+  "name": "Sistem Informasi Manajemen Inventaris",
   "description": "Aplikasi manajemen inventaris barang untuk institusi dengan fitur login admin dan user, pelacakan stok, dan laporan barang.",
-  "requestFramePermissions": ["camera"]
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": []
 }
