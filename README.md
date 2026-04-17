@@ -33,6 +33,11 @@ Aplikasi ini memiliki berbagai fitur yang memudahkan pengelolaan aset dan invent
 
 ---
 
+## Dokumentasi Teknis
+- [Skema Database](./DATABASE_SCHEMA.md) - Rincian tabel, kolom, dan relasi data.
+
+---
+
 ## Akun Demo (Dummy Login)
 
 Anda dapat mencoba aplikasi ini menggunakan akun berikut:
