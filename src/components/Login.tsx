@@ -47,7 +47,8 @@ export default function Login() {
         setError(data.message || 'Gagal masuk. Silakan coba lagi.');
       }
     } catch (err) {
-      setError('Terjadi kesalahan koneksi.');
+      console.error('Login connection error:', err);
+      setError('Terjadi kesalahan koneksi. Pastikan server aktif.');
     } finally {
       setIsLoading(false);
     }
