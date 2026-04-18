@@ -30,6 +30,7 @@ const supabase = new Proxy({} as any, {
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key";
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'admin@admin.com,donymaulanaXRPL1@gmail.com').split(',').map(e => e.trim());
 
 // Helper for logging
 const logActivity = async (user_id: number, action: string, details: string) => {
@@ -66,6 +67,11 @@ async function startServer() {
       const { data: { user: sbUser }, error: sbError } = await supabase.auth.getUser(token);
       
       if (!sbError && sbUser) {
+        // CRITICAL: Ensure email is verified if it's not a Google Auth user
+        if (sbUser.app_metadata.provider !== 'google' && !sbUser.email_confirmed_at) {
+          return res.status(403).json({ message: "Email verification required" });
+        }
+
         // Sync with our users table
         let { data: user, error: userError } = await supabase
           .from("users")
@@ -73,8 +79,7 @@ async function startServer() {
           .eq("username", sbUser.email)
           .single();
 
-        const adminEmails = ['admin@admin.com', 'donymaulanaXRPL1@gmail.com'];
-        const shouldBeAdmin = adminEmails.includes(sbUser.email || '');
+        const shouldBeAdmin = ADMIN_EMAILS.includes(sbUser.email || '');
 
         if (!user) {
           // Create user if not exists
@@ -144,6 +149,11 @@ async function startServer() {
       const sbUser = authData.user;
       if (!sbUser) return res.status(401).json({ message: "User tidak ditemukan" });
 
+      // CRITICAL: Ensure email is verified for login if not using social auth
+      if (sbUser.app_metadata.provider !== 'google' && !sbUser.email_confirmed_at) {
+        return res.status(403).json({ message: "Mohon verifikasi email Anda terlebih dahulu" });
+      }
+
       // 2. Sync with local users table
       let { data: user, error: userError } = await supabase
         .from("users")
@@ -151,8 +161,7 @@ async function startServer() {
         .eq("username", sbUser.email)
         .single();
 
-      const adminEmails = ['admin@admin.com', 'donymaulanaXRPL1@gmail.com'];
-      const shouldBeAdmin = adminEmails.includes(sbUser.email || '');
+      const shouldBeAdmin = ADMIN_EMAILS.includes(sbUser.email || '');
 
       if (!user) {
         // Create user in table if missing (first time login)
