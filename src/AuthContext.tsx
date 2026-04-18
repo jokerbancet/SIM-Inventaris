@@ -29,7 +29,6 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (token: string, user: User) => void;
-  loginWithGoogle: () => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -100,19 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('user', JSON.stringify(newUser));
   };
 
-  const loginWithGoogle = async () => {
-    const supabase = getSupabase();
-    if (!supabase) throw new Error("Fitur login tidak tersedia karena konfigurasi Supabase belum lengkap.");
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin
-      }
-    });
-    if (error) throw error;
-  };
-
   const logout = async () => {
     const supabase = getSupabase();
     if (supabase) {
@@ -125,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, loginWithGoogle, logout, isAuthenticated: !!token, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

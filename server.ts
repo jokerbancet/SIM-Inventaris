@@ -67,8 +67,8 @@ async function startServer() {
       const { data: { user: sbUser }, error: sbError } = await supabase.auth.getUser(token);
       
       if (!sbError && sbUser) {
-        // CRITICAL: Ensure email is verified if it's not a Google Auth user
-        if (sbUser.app_metadata.provider !== 'google' && !sbUser.email_confirmed_at) {
+        // CRITICAL: Ensure email is verified
+        if (!sbUser.email_confirmed_at) {
           return res.status(403).json({ message: "Email verification required" });
         }
 
@@ -149,8 +149,8 @@ async function startServer() {
       const sbUser = authData.user;
       if (!sbUser) return res.status(401).json({ message: "User tidak ditemukan" });
 
-      // CRITICAL: Ensure email is verified for login if not using social auth
-      if (sbUser.app_metadata.provider !== 'google' && !sbUser.email_confirmed_at) {
+      // CRITICAL: Ensure email is verified for login
+      if (!sbUser.email_confirmed_at) {
         return res.status(403).json({ message: "Mohon verifikasi email Anda terlebih dahulu" });
       }
 
